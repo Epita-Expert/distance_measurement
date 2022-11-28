@@ -36,7 +36,7 @@ while(True):
     upper_red = np.array([u_h, u_s, u_v])  # 180,255,255
 
     mask = cv2.inRange(hsv, lower_red, upper_red)
-    
+
     kernel = np.ones((5, 5), np.uint8)
 
     mask = cv2.erode(mask, kernel, iterations=1)

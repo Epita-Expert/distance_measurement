@@ -11,7 +11,7 @@ To install the python libraries run this command:
 ```sh
 python3 -m pip intall -r requirements.txt
 or
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Arduino IDE

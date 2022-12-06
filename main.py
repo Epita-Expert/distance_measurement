@@ -7,13 +7,13 @@ def nothing(x):
 
 
 # define a video capture object
-vid = cv2.VideoCapture(0)
+vid = cv2.VideoCapture("video_1m.mp4")
 cv2.namedWindow("Trackbars", cv2.WINDOW_NORMAL)
-cv2.createTrackbar('L-H', 'Trackbars', 16, 180, nothing)
-cv2.createTrackbar('L-S', 'Trackbars', 56, 255, nothing)
-cv2.createTrackbar('L-V', 'Trackbars', 94, 255, nothing)
-cv2.createTrackbar('U-H', 'Trackbars', 100, 180, nothing)
-cv2.createTrackbar('U-S', 'Trackbars', 178, 255, nothing)
+cv2.createTrackbar('L-H', 'Trackbars', 75, 255, nothing)
+cv2.createTrackbar('L-S', 'Trackbars', 0, 255, nothing)
+cv2.createTrackbar('L-V', 'Trackbars', 0, 255, nothing)
+cv2.createTrackbar('U-H', 'Trackbars', 255, 255, nothing)
+cv2.createTrackbar('U-S', 'Trackbars', 255, 255, nothing)
 cv2.createTrackbar('U-V', 'Trackbars', 255, 255, nothing)
 
 

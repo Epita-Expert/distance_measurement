@@ -1,3 +1,6 @@
+# Videos too large to be committed to the repo
+*.mp4
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

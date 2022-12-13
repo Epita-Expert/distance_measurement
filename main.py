@@ -1,74 +1,102 @@
-import cv2
+from collections import deque
+from imutils import paths
 import numpy as np
+import argparse
+import imutils
+import cv2
+
+def distance_to_camera(focalLength, ballWidth):
+    # compute and return the distance from the maker to the camera
+    KNOWN_WIDTH = 4.27 * 0.01 * 39.37
+    return ((KNOWN_WIDTH * focalLength) / ballWidth) / 39.37
+
+def init_focal_length(marker, knownDistanceMeter):
+    # initialize the known distance from the camera to the object, which
+    # in this case is 24 inches
+    KNOWN_DISTANCE = knownDistanceMeter * 39.37
+    # initialize the known object width, which in this case, the piece of
+    # paper is 12 inches wide
+    KNOWN_WIDTH = 4.27 * 0.01 * 39.37
+    # load the furst image that contains an object that is KNOWN TO BE 2 feet
+    # from our camera, then find the paper marker in the image, and initialize
+    # the focal length
+    # image = cv2.imread("images/2ft.png")
+    # marker = find_marker(image)
+    return ((marker * 2) * KNOWN_DISTANCE) / KNOWN_WIDTH
 
 
-def nothing(x):
-    pass
 
+ap = argparse.ArgumentParser()
+ap.add_argument("-v", "--video", help="path to the (optional) video file")
+args = vars(ap.parse_args())
 
-# define a video capture object
-vid = cv2.VideoCapture(0)
-cv2.namedWindow("Trackbars", cv2.WINDOW_NORMAL)
-cv2.createTrackbar('L-H', 'Trackbars', 16, 180, nothing)
-cv2.createTrackbar('L-S', 'Trackbars', 56, 255, nothing)
-cv2.createTrackbar('L-V', 'Trackbars', 94, 255, nothing)
-cv2.createTrackbar('U-H', 'Trackbars', 100, 180, nothing)
-cv2.createTrackbar('U-S', 'Trackbars', 178, 255, nothing)
-cv2.createTrackbar('U-V', 'Trackbars', 255, 255, nothing)
+# define the lower and upper boundaries of the "green"
+# ball in the HSV color space, then initialize the
+# list of tracked points
+lower_green = (55, 55, 55)
+upper_green = (78, 255, 255)
+init = False
 
+# if a video path was not supplied, grab the reference
+# to the webcam
+if not args.get("video", False):
+    camera = cv2.VideoCapture(1)
+# otherwise, grab a reference to the video file
+else:
+    camera = cv2.VideoCapture(args["video"])
 
-while(True):
-
-    # Capture the video frame
-    # by frame
-    ret, frame = vid.read()
-
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-    l_h = cv2.getTrackbarPos('L-H', 'Trackbars')
-    l_s = cv2.getTrackbarPos('L-S', 'Trackbars')
-    l_v = cv2.getTrackbarPos('L-V', 'Trackbars')
-    u_h = cv2.getTrackbarPos('U-H', 'Trackbars')
-    u_s = cv2.getTrackbarPos('U-S', 'Trackbars')
-    u_v = cv2.getTrackbarPos('U-V', 'Trackbars')
-
-    lower_red = np.array([l_h, l_s, l_v])  # 0,0,0
-    upper_red = np.array([u_h, u_s, u_v])  # 180,255,255
-
-    mask = cv2.inRange(hsv, lower_red, upper_red)
-
-    kernel = np.ones((5, 5), np.uint8)
-
-    mask = cv2.erode(mask, kernel, iterations=1)
-
-    # Contours detection
-
-    contours, _ = cv2.findContours(
-        mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    for cnt in contours:
-        area = cv2.contourArea(cnt)
-        approx = cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt, True), True)
-        x = approx.ravel()[0]
-        y = approx.ravel()[1]
-        if area > 400:
-            print(area)
-            # print(len(approx))
-            cv2.drawContours(frame, [approx], 0, (0, 0, 0), 2)
-            if len(approx) >= 12 and len(approx) <= 19:
-                cv2.putText(frame, "Balle - distance: {0}".format(area), (x, y),
-                            cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0))
-
-    # Display the resulting frame
-    cv2.imshow('mask', mask)
-    cv2.imshow('frame', frame)
-    # the 'q' button is set as the
-    # quitting button you may use any
-    # desired button of your choice
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+while True:
+    (grabbed, frame) = camera.read()
+    if args.get("video") and not grabbed:
         break
 
-# After the loop release the cap object
-vid.release()
-# Destroy all the windows
+    # resize the frame, blur it, and convert it to the HSV
+	# color space
+    frame = imutils.resize(frame, width=900)
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    # construct a mask for the color "green", then perform
+    # a series of dilations and erosions to remove any small
+    # blobs left in the mask
+    mask = cv2.inRange(hsv, lower_green, upper_green)
+    mask = cv2.erode(mask, None, iterations=2)
+    mask = cv2.dilate(mask, None, iterations=2)
+
+    cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+    center = None
+
+    for cnt in cnts:
+        c = max(cnts, key=cv2.contourArea)
+        area = cv2.contourArea(cnt)
+
+        rect = cv2.minAreaRect(c)
+
+        ((x, y), radius) = cv2.minEnclosingCircle(c)
+        print("rect : {0}".format(rect))
+
+        if not init:
+            init = True
+            focalLength = init_focal_length(radius, 2)
+            print("focal length : {0}".format(focalLength))
+
+        if radius < 60:
+           cv2.circle(frame, (int(x), int(y)), int(radius), (0, 0, 255), 2)
+           inches = distance_to_camera(focalLength, radius * 2)
+           cv2.putText(frame, "Balle - distance: {0}".format(inches), (int(x), int(y)),
+                            cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0, 0))
+           print("Balle - area: {0}".format(int(area)))
+           print("Balle - x: {0}".format(int(x)))
+           print("Balle - y: {0}".format(int(y)))
+           print("Balle - radius: {0}".format(int(radius)))
+           print("center : {0}".format(center))
+           print("focal length : {0}".format(focalLength))
+
+    cv2.imshow("Frame", frame)
+    cv2.imshow("Mask", mask)
+
+    key = cv2.waitKey(1) & 0xFF
+
+    if key == ord("q"):
+        break
+
+camera.release()
 cv2.destroyAllWindows()

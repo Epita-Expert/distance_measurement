@@ -40,5 +40,5 @@ http://arduino.esp8266.com/stable/package_esp8266com_index.json
 Run the ball tracking script:
 
 ```sh
-  python3 main.py --video name_of_the_video.mp4
+python3 main.py --video name_of_the_video.mp4
 ```

@@ -7,16 +7,23 @@ import cv2
 
 # Balle Jaune: 6.7
 # sizeBall = 6.7
-# Balle Verte: 2.3
-sizeBall = 2.3
-
-## config balle verte
-lower_green = (36, 69, 20)
-upper_green = (75, 255, 255)
-
-## config balle jaune
 # lower_green = (18, 210, 20)
 # upper_green = (30, 255, 255)
+
+# config balle verte
+# sizeBall = 2.3
+# lower_green = (36, 69, 20)
+# upper_green = (75, 255, 255)
+
+# config balle de golf sous l'eau
+# sizeBall = 4.27
+# lower_green = (55, 0, 20)
+# upper_green = (80, 255, 255)
+
+# config balle de tenis
+sizeBall = 6.6
+lower_green = (30, 50, 50)
+upper_green = (50, 255, 255)
 
 ## config balle orange
 # NOT FOUND !!!!!!!!!!!
@@ -88,7 +95,7 @@ while True:
             init = True
             focalLength = init_focal_length(radius, 1)
 
-        if radius < 60:
+        if radius < 120:
            cv2.circle(frame, (int(x), int(y)), int(radius), (0, 0, 255), 2)
            inches = round(distance_to_camera(focalLength, radius * 2), 2)
            cv2.putText(frame, "Balle - distance: {0}".format(inches), (int(x), int(y)),

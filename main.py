@@ -6,13 +6,23 @@ import imutils
 import cv2
 
 # Balle Jaune: 6.7
-
+# sizeBall = 6.7
 # Balle Verte: 2.3
 sizeBall = 2.3
-## config balle verte
-lower_green = (36, 69, 110)
-upper_green = (255, 255, 255)
 
+## config balle verte
+lower_green = (36, 69, 20)
+upper_green = (75, 255, 255)
+
+## config balle jaune
+# lower_green = (18, 210, 20)
+# upper_green = (30, 255, 255)
+
+## config balle orange
+# NOT FOUND !!!!!!!!!!!
+# lower_green = (10, 180, 20)
+# upper_green = (15, 190, 255)
+# NOT FOUND !!!!!!!!!!!
 
 def distance_to_camera(focalLength, ballWidth):
     # compute and return the distance from the maker to the camera
@@ -21,16 +31,14 @@ def distance_to_camera(focalLength, ballWidth):
 
 def init_focal_length(radius, knownDistanceMeter):
     # initialize the known distance from the camera to the object, which
-    # in this case is 24 inches
+    # in this case is 1 or 2 meters
     KNOWN_DISTANCE = knownDistanceMeter
     # initialize the known object width, which in this case, the piece of
-    # paper is 12 inches wide
+    # paper is 2.7 cm wide
     KNOWN_WIDTH = sizeBall * 0.01
-    # load the furst image that contains an object that is KNOWN TO BE 2 feet
+    # load the first image that contains an object that is KNOWN TO BE 1 or 2 meters
     # from our camera, then find the paper marker in the image, and initialize
     # the focal length
-    # image = cv2.imread("images/2ft.png")
-    # marker = find_marker(image)
     return ((radius * 2) * KNOWN_DISTANCE) / KNOWN_WIDTH
 
 ap = argparse.ArgumentParser()
@@ -85,7 +93,7 @@ while True:
            inches = round(distance_to_camera(focalLength, radius * 2), 2)
            cv2.putText(frame, "Balle - distance: {0}".format(inches), (int(x), int(y)),
                             cv2.FONT_HERSHEY_COMPLEX, 0.5, (100, 150, 0))
-        print("inches : {0}".format(inches))
+           print("inches : {0}".format(inches))
 
     cv2.imshow("Frame", frame)
     cv2.imshow("Mask", mask)
